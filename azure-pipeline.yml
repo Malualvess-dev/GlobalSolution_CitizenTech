@@ -14,6 +14,10 @@ variables:
     value: 'sc-acr-paradacerta'
   - name: acrLoginServer
     value: 'acrparadacerta9142.azurecr.io'
+  - name: azureServiceConnection
+    value: 'sc-azure-paradacerta'
+  - name: webAppName
+    value: 'api-paradacerta-9142'
 stages:
   - stage: BuildAndTest
     displayName: 'CI - Build Maven, Testes JUnit e Push Docker'
@@ -58,3 +62,18 @@ stages:
               PathtoPublish: '$(Build.ArtifactStagingDirectory)'
               ArtifactName: 'drop'
               publishLocation: 'Container'
+
+  - stage: DeployProd
+    displayName: 'CD - Deploy Automático no Azure Web App'
+    dependsOn: BuildAndTest
+    condition: succeeded()
+    jobs:
+      - job: DeployJob
+        steps:
+          - task: AzureWebAppContainer@1
+            displayName: 'Deploy Container na Azure'
+            inputs:
+              azureSubscription: '$(azureServiceConnection)'
+              appName: '$(webAppName)'
+              containers: '$(acrLoginServer)/$(imageName):$(Build.BuildId)'
+              appSettings: '-SPRING_PROFILES_ACTIVE prod -WEBSITES_PORT 8080 -DB_URL "$(DB_URL)" -DB_USER "$(DB_USER)" -DB_PASSWORD "$(DB_PASSWORD)" -RABBITMQ_HOST "$(RABBITMQ_HOST)" -RABBITMQ_USER "$(RABBITMQ_USER)" -RABBITMQ_PASSWORD "$(RABBITMQ_PASSWORD)" -JWT_SECRET "$(JWT_SECRET)" -OPENAI_API_KEY "$(OPENAI_API_KEY)"'
