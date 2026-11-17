@@ -1,0 +1,79 @@
+trigger:
+  branches:
+    include:
+      - main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  - group: vg-paradacerta
+  - name: imageName
+    value: 'paradacerta-api'
+  - name: acrServiceConnection
+    value: 'sc-acr-paradacerta'
+  - name: acrLoginServer
+    value: 'acrparadacerta9142.azurecr.io'
+  - name: azureServiceConnection
+    value: 'sc-azure-paradacerta'
+  - name: webAppName
+    value: 'api-paradacerta-9142'
+stages:
+  - stage: BuildAndTest
+    displayName: 'CI - Build Maven, Testes JUnit e Push Docker'
+    jobs:
+      - job: BuildJob
+        steps:
+          - task: Maven@4
+            displayName: 'Build e Testes Automatizados JUnit'
+            inputs:
+              mavenPomFile: 'citizentech/pom.xml'
+              goals: 'clean test package'
+              options: '-Dspring.profiles.active=test'
+              publishJUnitResults: true
+              testResultsFiles: '**/surefire-reports/TEST-*.xml'
+              javaHomeOption: 'JDKVersion'
+              jdkVersionOption: '1.21'
+
+          - task: Docker@2
+            displayName: 'Build e Push da Imagem para ACR'
+            inputs:
+              containerRegistry: '$(acrServiceConnection)'
+              repository: '$(imageName)'
+              command: 'buildAndPush'
+              Dockerfile: 'dockerfiles/Dockerfile'
+              buildContext: '$(Build.SourcesDirectory)'
+              tags: |
+                $(Build.BuildId)
+                latest
+
+          - task: CopyFiles@2
+            displayName: 'Preparar Artefatos'
+            inputs:
+              SourceFolder: '$(Build.SourcesDirectory)'
+              Contents: |
+                citizentech/target/*.jar
+                scripts/**
+              TargetFolder: '$(Build.ArtifactStagingDirectory)'
+
+          - task: PublishBuildArtifacts@1
+            displayName: 'Publicar Artefato drop'
+            inputs:
+              PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+              ArtifactName: 'drop'
+              publishLocation: 'Container'
+
+  - stage: DeployProd
+    displayName: 'CD - Deploy Automático no Azure Web App'
+    dependsOn: BuildAndTest
+    condition: succeeded()
+    jobs:
+      - job: DeployJob
+        steps:
+          - task: AzureWebAppContainer@1
+            displayName: 'Deploy Container na Azure'
+            inputs:
+              azureSubscription: '$(azureServiceConnection)'
+              appName: '$(webAppName)'
+              containers: '$(acrLoginServer)/$(imageName):$(Build.BuildId)'
+              appSettings: '-SPRING_PROFILES_ACTIVE prod -WEBSITES_PORT 8080 -DB_URL "$(DB_URL)" -DB_USER "$(DB_USER)" -DB_PASSWORD "$(DB_PASSWORD)" -RABBITMQ_HOST "$(RABBITMQ_HOST)" -RABBITMQ_USER "$(RABBITMQ_USER)" -RABBITMQ_PASSWORD "$(RABBITMQ_PASSWORD)" -JWT_SECRET "$(JWT_SECRET)" -OPENAI_API_KEY "$(OPENAI_API_KEY)"'
