@@ -56,6 +56,7 @@ az container create \
   --resource-group $RG \
   --name $ACI_RABBIT \
   --image rabbitmq:3-management \
+  --os-type Linux \
   --dns-name-label $RABBIT_DNS \
   --ports 5672 15672 \
   --cpu 1 \
