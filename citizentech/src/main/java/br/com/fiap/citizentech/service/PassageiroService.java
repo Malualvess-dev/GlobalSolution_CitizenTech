@@ -1,6 +1,7 @@
 package br.com.fiap.citizentech.service;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -42,7 +43,7 @@ public class PassageiroService {
 		verificarCuidadorDoRequest(request, usuario);
 		Passageiro passageiro = new Passageiro();
 		preencher(passageiro, request);
-		passageiro.setConsentimentoEm(LocalDateTime.now());
+		passageiro.setConsentimentoEm(agora());
 		return PassageiroResponse.from(passageiroRepository.save(passageiro));
 	}
 
@@ -54,7 +55,7 @@ public class PassageiroService {
 		preencher(passageiro, request);
 		// LGPD: nova versao do termo registra um novo consentimento
 		if (novaVersaoDoTermo) {
-			passageiro.setConsentimentoEm(LocalDateTime.now());
+			passageiro.setConsentimentoEm(agora());
 		}
 		return PassageiroResponse.from(passageiro);
 	}
@@ -93,6 +94,12 @@ public class PassageiroService {
 		passageiro.setTipoNecessidade(request.tipoNecessidade());
 		passageiro.setContatoEmergencia(request.contatoEmergencia().trim());
 		passageiro.setVersaoTermo(request.versaoTermo().trim());
+	}
+
+
+	// Mesma precisao do banco (microssegundos)
+	private static LocalDateTime agora() {
+		return LocalDateTime.now().truncatedTo(ChronoUnit.MICROS);
 	}
 
 }
