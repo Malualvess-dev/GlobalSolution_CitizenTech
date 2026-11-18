@@ -18,7 +18,6 @@ public interface SolicitacaoEmbarqueRepository extends JpaRepository<Solicitacao
 
 	boolean existsByChaveIdempotencia(String chaveIdempotencia);
 
-	/** Usado para garantir uma unica solicitacao ativa por passageiro. */
 	boolean existsByPassageiroIdAndStatusIn(Long passageiroId, Collection<StatusSolicitacao> status);
 
 }

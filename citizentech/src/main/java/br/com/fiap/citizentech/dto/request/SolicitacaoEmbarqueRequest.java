@@ -10,10 +10,8 @@ public record SolicitacaoEmbarqueRequest(
 		@NotNull(message = "O totem e obrigatorio")
 		Long totemId,
 
-		/** Opcional: o botao do totem funciona sem cartao. */
 		Long passageiroId,
 
-		/** Opcional: sem cartao, a linha ainda nao e conhecida. */
 		Long linhaId,
 
 		@NotNull(message = "O tipo de sinal e obrigatorio (CARTAO ou BOTAO)")

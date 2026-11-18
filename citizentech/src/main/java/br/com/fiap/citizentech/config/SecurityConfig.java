@@ -33,18 +33,6 @@ import br.com.fiap.citizentech.security.JwtProperties;
 import br.com.fiap.citizentech.security.SecurityErrorHandler;
 import br.com.fiap.citizentech.security.TokenService;
 
-/**
- * Seguranca da API com JWT (stateless).
- * <p>
- * Papeis: ROLE_CUIDADOR, ROLE_MOTORISTA e ROLE_GESTOR, vindos do claim "perfil" do token.
- * <ul>
- * <li>Publico: login, registro de cuidador, Swagger e health check.</li>
- * <li>GESTOR: usuarios, cadastro de paradas, linhas, totens e veiculos, e exclusao de solicitacoes.</li>
- * <li>CUIDADOR e GESTOR: passageiros, cartoes e rotas frequentes (o cuidador so ve os dele).</li>
- * <li>MOTORISTA e GESTOR: consulta de solicitacoes e mudanca de status.</li>
- * <li>Qualquer usuario logado: consulta de paradas e linhas.</li>
- * </ul>
- */
 @Configuration
 public class SecurityConfig {
 
@@ -57,7 +45,7 @@ public class SecurityConfig {
 	public SecurityFilterChain securityFilterChain(HttpSecurity http, SecurityErrorHandler securityErrorHandler,
 			JwtAuthenticationConverter jwtAuthenticationConverter) throws Exception {
 		return http
-				// API REST stateless com token no header: sem sessao e sem CSRF
+
 				.csrf(AbstractHttpConfigurer::disable)
 				.cors(Customizer.withDefaults())
 				.sessionManagement(sessao -> sessao.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -92,11 +80,6 @@ public class SecurityConfig {
 				.build();
 	}
 
-	/**
-	 * CORS para o app chamar a API pelo navegador (Expo Web). O app nativo (Android/iOS) nao usa CORS.
-	 * As origens vem de CORS_ALLOWED_ORIGINS (separadas por virgula); o padrao "*" libera todas,
-	 * o que e seguro aqui porque a autenticacao e por token no header, sem cookies.
-	 */
 	@Bean
 	public CorsConfigurationSource corsConfigurationSource(
 			@Value("${citizentech.cors.allowed-origins:*}") List<String> origens) {
@@ -113,7 +96,6 @@ public class SecurityConfig {
 		return source;
 	}
 
-	/** Le o claim "perfil" do token e transforma em papel: GESTOR -> ROLE_GESTOR. */
 	@Bean
 	public JwtAuthenticationConverter jwtAuthenticationConverter() {
 		JwtGrantedAuthoritiesConverter papeis = new JwtGrantedAuthoritiesConverter();
@@ -130,7 +112,6 @@ public class SecurityConfig {
 		return new NimbusJwtEncoder(new ImmutableSecret<>(chave(jwtProperties)));
 	}
 
-	/** Valida assinatura, expiracao e emissor de todo token recebido. */
 	@Bean
 	public JwtDecoder jwtDecoder(JwtProperties jwtProperties) {
 		NimbusJwtDecoder decoder = NimbusJwtDecoder.withSecretKey(chave(jwtProperties))

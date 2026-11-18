@@ -8,10 +8,6 @@ import io.swagger.v3.oas.annotations.info.Info;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.security.SecurityScheme;
 
-/**
- * Documentacao OpenAPI. O esquema "bearerAuth" cria o botao "Authorize" no Swagger UI:
- * faca o login em /auth/login, copie o token e cole la para testar os endpoints protegidos.
- */
 @Configuration
 @OpenAPIDefinition(
 		info = @Info(

@@ -15,9 +15,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/**
- * Parada de onibus (tabela PARADA).
- */
 @Entity
 @Table(name = "parada")
 @Getter
@@ -33,7 +30,6 @@ public class Parada {
 	@EqualsAndHashCode.Include
 	private Long id;
 
-	/** Codigo da parada na API Olho Vivo da SPTrans (campo "cp"). */
 	@Column(name = "codigo_sptrans", nullable = false, unique = true, precision = 10)
 	private Long codigoSptrans;
 

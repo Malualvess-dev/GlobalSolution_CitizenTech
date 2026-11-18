@@ -12,16 +12,6 @@ import org.springframework.transaction.event.TransactionalEventListener;
 import br.com.fiap.citizentech.config.RabbitConfig;
 import lombok.RequiredArgsConstructor;
 
-/**
- * Envia o {@link SolicitacaoCriadaEvent} para o RabbitMQ.
- * <p>
- * So roda depois do COMMIT da transacao que criou a solicitacao: se o envio fosse antes,
- * o consumidor poderia receber o id de uma solicitacao que ainda nao esta no banco
- * (ou que foi desfeita por um erro).
- * <p>
- * Ativo no modo de mensageria "rabbit" (padrao). No modo "local", quem trata o evento e o
- * {@link AvisoMotoristaLocal}.
- */
 @Component
 @ConditionalOnProperty(name = "citizentech.mensageria.modo", havingValue = "rabbit", matchIfMissing = true)
 @RequiredArgsConstructor
@@ -40,8 +30,7 @@ public class SolicitacaoEventPublisher {
 					evento);
 			log.info("Evento solicitacao.criada publicado para a solicitacao {}", evento.solicitacaoId());
 		} catch (AmqpException e) {
-			// A solicitacao ja esta gravada e o totem ja recebeu a resposta: o erro e registrado
-			// e a solicitacao fica como CRIADA, visivel para o gestor.
+			// RabbitMQ fora do ar nao desfaz a solicitacao ja gravada
 			log.error("Falha ao publicar o evento da solicitacao {} no RabbitMQ", evento.solicitacaoId(), e);
 		}
 	}

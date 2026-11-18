@@ -14,7 +14,6 @@ import br.com.fiap.citizentech.repository.CartaoRepository;
 import br.com.fiap.citizentech.security.UsuarioLogado;
 import lombok.RequiredArgsConstructor;
 
-/** Cartoes seguem a mesma regra de dono do passageiro: o cuidador so acessa os dos seus passageiros. */
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)

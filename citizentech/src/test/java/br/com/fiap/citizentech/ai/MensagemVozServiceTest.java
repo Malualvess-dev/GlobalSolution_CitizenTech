@@ -21,7 +21,6 @@ import org.springframework.ai.chat.client.ChatClient.PromptUserSpec;
 import br.com.fiap.citizentech.model.enums.TipoNecessidade;
 import br.com.fiap.citizentech.model.enums.TipoSinal;
 
-/** Testa a mensagem de voz sem chamar a OpenAI: o ChatClient e simulado com Mockito. */
 class MensagemVozServiceTest {
 
 	private static final ContextoMensagemVoz BAIXA_VISAO_COM_LINHA = new ContextoMensagemVoz(
@@ -56,7 +55,7 @@ class MensagemVozServiceTest {
 
 		@SuppressWarnings("unchecked")
 		ArgumentCaptor<Consumer<PromptUserSpec>> captor = ArgumentCaptor.forClass(Consumer.class);
-		// com deep stubs, a preparacao do mock tambem conta como chamada: a ultima e a do service
+
 		verify(chatClient.prompt(), atLeastOnce()).user(captor.capture());
 		PromptUserSpec pedido = mock(PromptUserSpec.class, RETURNS_SELF);
 		captor.getAllValues().getLast().accept(pedido);

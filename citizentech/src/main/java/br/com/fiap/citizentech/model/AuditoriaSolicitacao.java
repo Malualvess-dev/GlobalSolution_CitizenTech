@@ -17,12 +17,6 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-/**
- * Historico de alteracoes das solicitacoes (tabela AUDITORIA_SOLICITACAO).
- * <p>
- * Somente leitura na aplicacao: quem grava e o gatilho trg_auditoria_solicitacao no Oracle.
- * Nao tem chave estrangeira de proposito, por isso guarda so o id da solicitacao.
- */
 @Entity
 @Immutable
 @Table(name = "auditoria_solicitacao")

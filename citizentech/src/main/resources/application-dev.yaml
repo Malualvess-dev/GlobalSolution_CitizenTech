@@ -1,6 +1,4 @@
-# Perfil dev: roda a API sem Oracle, sem RabbitMQ e sem chave da OpenAI.
-# Feito para o time do front testar o app:  ./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
-# Nao use em producao: os segredos abaixo sao publicos.
+# Perfil dev: sem Oracle, RabbitMQ ou OpenAI. Nao usar em producao.
 spring:
   datasource:
     url: jdbc:h2:mem:citizentech;MODE=Oracle;DB_CLOSE_DELAY=-1
@@ -16,7 +14,6 @@ spring:
         auto-startup: false
   ai:
     openai:
-      # Sem chave real a chamada falha e o totem usa a frase padrao (fallback)
       api-key: ${OPENAI_API_KEY:sem-chave-no-perfil-dev}
     retry:
       max-attempts: 1
@@ -27,7 +24,6 @@ citizentech:
   hash:
     secret: ${HASH_SECRET:segredo-de-hash-do-perfil-dev}
   mensageria:
-    # local: aviso ao motorista roda na propria API, sem fila (ver AvisoMotoristaLocal)
     modo: local
 
 management:

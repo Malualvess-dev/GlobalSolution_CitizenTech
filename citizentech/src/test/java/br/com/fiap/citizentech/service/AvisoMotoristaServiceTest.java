@@ -25,7 +25,6 @@ import br.com.fiap.citizentech.repository.SolicitacaoEmbarqueRepository;
 import br.com.fiap.citizentech.repository.TentativaEmbarqueRepository;
 import br.com.fiap.citizentech.repository.TotemRepository;
 
-/** Testa o que o consumidor do RabbitMQ faz com o evento, usando o banco H2. */
 @SpringBootTest
 @ActiveProfiles("test")
 @Transactional

@@ -23,10 +23,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/**
- * Passageiro assistido, cadastrado por um cuidador (tabela PASSAGEIRO).
- * Dado sensivel (LGPD): guarda so o tipo de necessidade e o consentimento do cuidador.
- */
 @Entity
 @Table(name = "passageiro")
 @Getter
@@ -56,11 +52,9 @@ public class Passageiro {
 	@Column(name = "contato_emergencia", nullable = false, length = 40)
 	private String contatoEmergencia;
 
-	/** LGPD: quando o cuidador aceitou o termo. */
 	@Column(name = "consentimento_em", nullable = false)
 	private LocalDateTime consentimentoEm;
 
-	/** LGPD: versao do termo que foi aceita. */
 	@Column(name = "versao_termo", nullable = false, length = 20)
 	private String versaoTermo;
 

@@ -5,7 +5,6 @@ import java.time.LocalDateTime;
 import br.com.fiap.citizentech.model.Totem;
 import br.com.fiap.citizentech.model.enums.StatusTotem;
 
-/** O hash do token do dispositivo nunca sai da API. */
 public record TotemResponse(
 		Long id,
 		Long paradaId,

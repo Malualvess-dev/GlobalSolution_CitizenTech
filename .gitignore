@@ -1,11 +1,10 @@
-# IDEs
 .idea/
 *.iml
 .vscode/
 
-# Variaveis de ambiente com segredos (use .env.example como modelo)
 .env
 
-# Sistema operacional
 .DS_Store
 Thumbs.db
+
+scripts/azure.env

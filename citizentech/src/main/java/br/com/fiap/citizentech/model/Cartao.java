@@ -24,10 +24,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/**
- * Bilhete Unico vinculado a um passageiro (tabela CARTAO).
- * Guarda so o hash HMAC-SHA256 do UID do cartao, nunca o UID puro.
- */
 @Entity
 @Table(name = "cartao")
 @Getter
@@ -51,7 +47,6 @@ public class Cartao {
 	@Column(name = "uid_hash", nullable = false, unique = true, length = 64)
 	private String uidHash;
 
-	/** Coluna NUMBER(1): 1 = ativo, 0 = inativo. */
 	@Builder.Default
 	@Convert(converter = NumericBooleanConverter.class)
 	@Column(name = "ativo", nullable = false, precision = 1)

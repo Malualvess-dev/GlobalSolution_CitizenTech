@@ -13,12 +13,6 @@ import org.springframework.stereotype.Service;
 import br.com.fiap.citizentech.model.Usuario;
 import lombok.RequiredArgsConstructor;
 
-/**
- * Emite o token JWT (HS256) depois do login.
- * <p>
- * Claims: sub = id do usuario, perfil = CUIDADOR | MOTORISTA | GESTOR (vira o papel ROLE_*),
- * nome e email para o app exibir sem outra chamada.
- */
 @Service
 @RequiredArgsConstructor
 public class TokenService {

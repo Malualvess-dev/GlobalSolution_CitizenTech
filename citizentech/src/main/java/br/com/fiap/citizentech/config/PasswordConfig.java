@@ -5,7 +5,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-/** Senhas dos usuarios sao gravadas com BCrypt (coluna usuario.senha_hash). */
 @Configuration
 public class PasswordConfig {
 

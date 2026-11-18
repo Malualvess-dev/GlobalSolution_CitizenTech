@@ -1,5 +1,3 @@
-# Perfil usado pelos testes automaticos (local e no CI).
-# Troca o Oracle por H2 em memoria e usa chaves falsas: nada externo e chamado.
 spring:
   datasource:
     url: jdbc:h2:mem:citizentech;MODE=Oracle;DB_CLOSE_DELAY=-1
@@ -12,11 +10,9 @@ spring:
   ai:
     openai:
       api-key: chave-falsa-para-teste
-      # Endereco sem servidor: a chamada falha na hora e os testes exercitam a frase padrao
       base-url: http://localhost:9
     retry:
       max-attempts: 1
-  # Nao ha RabbitMQ nos testes: o consumidor nao tenta conectar
   rabbitmq:
     listener:
       simple:
@@ -28,7 +24,6 @@ citizentech:
   hash:
     secret: segredo-hash-de-teste
 
-# Nao ha RabbitMQ nos testes: o health check nao deve ficar DOWN por isso
 management:
   health:
     rabbit:
