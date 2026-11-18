@@ -1,6 +1,7 @@
 package br.com.fiap.citizentech.service;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -47,7 +48,7 @@ public class PassageiroService {
 		verificarCuidadorDoRequest(request, usuario);
 		Passageiro passageiro = new Passageiro();
 		preencher(passageiro, request);
-		passageiro.setConsentimentoEm(LocalDateTime.now());
+		passageiro.setConsentimentoEm(agora());
 		return PassageiroResponse.from(passageiroRepository.save(passageiro));
 	}
 
@@ -59,7 +60,7 @@ public class PassageiroService {
 		preencher(passageiro, request);
 		if (novaVersaoDoTermo) {
 			// LGPD: aceite de uma nova versao do termo registra um novo consentimento
-			passageiro.setConsentimentoEm(LocalDateTime.now());
+			passageiro.setConsentimentoEm(agora());
 		}
 		return PassageiroResponse.from(passageiro);
 	}
@@ -100,6 +101,12 @@ public class PassageiroService {
 		passageiro.setTipoNecessidade(request.tipoNecessidade());
 		passageiro.setContatoEmergencia(request.contatoEmergencia().trim());
 		passageiro.setVersaoTermo(request.versaoTermo().trim());
+	}
+
+
+	/** Microssegundos, a mesma precisao do banco: a data devolvida ao criar e igual a lida depois. */
+	private static LocalDateTime agora() {
+		return LocalDateTime.now().truncatedTo(ChronoUnit.MICROS);
 	}
 
 }
