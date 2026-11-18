@@ -10,6 +10,16 @@ Perfis de usuário:
 | `MOTORISTA` | Vê as solicitações da sua linha e marca embarque / não atendimento |
 | `GESTOR` | Administra usuários, paradas, linhas, totens, veículos e acompanha tudo |
 
+### Links da entrega
+
+| | |
+|---|---|
+| Deploy da API | https://api-paradacerta.azurewebsites.net |
+| Swagger | https://api-paradacerta.azurewebsites.net/swagger-ui.html |
+| App Mobile (front) | https://github.com/Jounaxis/parada-certa |
+| Vídeo pitch | _link do vídeo_ |
+| Opção do requisito 5 | **A – mensageria com RabbitMQ** |
+
 ---
 
 ## Sumário
@@ -28,7 +38,7 @@ Perfis de usuário:
 12. [Guia de integração para o app (front / mobile)](#guia-de-integração-para-o-app-front--mobile)
 13. [Testes](#testes)
 14. [Estrutura do projeto](#estrutura-do-projeto)
-15. [Deploy (Azure + Azure DevOps)](#deploy-azure--azure-devops)
+15. [Deploy (Azure)](#deploy-azure)
 16. [Declaração de uso de IA](#declaração-de-uso-de-ia)
 
 ---
@@ -144,7 +154,7 @@ Dados de exemplo do perfil `dev`:
 | Cartão | `1` – UID `04A1B2C3`, do passageiro 1 |
 | Rota frequente | `1` – "Casa para o trabalho" (parada 1, linha 6091-10) |
 
-No modo completo (Oracle), o primeiro gestor vem de `GESTOR_EMAIL` / `GESTOR_SENHA`. O cadastro público (`/auth/registro`) cria sempre um `CUIDADOR`. Motoristas e gestores são criados por um gestor em `/api/usuarios`.
+No deploy do Azure (Oracle), crie uma conta de cuidador pelo app ou em `POST /auth/registro` e faça login com ela. O primeiro gestor vem de `GESTOR_EMAIL` / `GESTOR_SENHA`. O cadastro público (`/auth/registro`) cria sempre um `CUIDADOR`. Motoristas e gestores são criados por um gestor em `/api/usuarios`.
 
 ---
 
@@ -481,104 +491,63 @@ citizentech/src/main/java/br/com/fiap/citizentech
 
 ---
 
-## Deploy (Azure + Azure DevOps)
+## Deploy (Azure)
 
 **API publicada:** https://api-paradacerta.azurewebsites.net (Swagger em https://api-paradacerta.azurewebsites.net/swagger-ui.html)
 
-### Arquitetura macro
+### Arquitetura
 
 ```mermaid
 flowchart LR
-    subgraph Usuarios
-        APP["App Mobile<br/>(Expo / React Native)<br/>cuidador"]
-        MOT["App do motorista /<br/>painel do gestor"]
-        TOT["Totem ESP32<br/>cartao ou botao"]
-    end
-
-    subgraph DevOps["Azure DevOps"]
-        BOARDS["Azure Boards<br/>tarefas"]
-        REPOS["Azure Repos<br/>main protegida + PR"]
-        CI["Pipeline Build (CI)<br/>Maven + testes JUnit<br/>artefato .jar"]
-        CD["Pipeline Deploy (CD)<br/>AzureWebApp + teste de fumaca"]
-        BOARDS -. vincula .- REPOS
-        REPOS -- merge na main --> CI -- novo artefato --> CD
-    end
+    APP["App Mobile<br/>(Expo / React Native)"]
+    TOT["Totem ESP32<br/>cartao ou botao"]
 
     subgraph Azure["Azure - rg-paradacerta (brazilsouth)"]
-        WEB["App Service Linux<br/>Web App Java 21<br/>API Spring Boot"]
+        WEB["App Service Linux<br/>Java 21 - API Spring Boot"]
         ACR["Container Registry<br/>imagem do RabbitMQ"]
         ACI["Container Instance<br/>RabbitMQ 4.1"]
         ACR --> ACI
     end
 
-    ORA[("Oracle FIAP<br/>banco PaaS")]
+    ORA[("Oracle FIAP")]
     OAI["OpenAI<br/>(Spring AI)"]
 
     APP -- "HTTPS + JWT" --> WEB
-    MOT -- "HTTPS + JWT" --> WEB
     TOT -- HTTPS --> WEB
     WEB -- JDBC --> ORA
     WEB -- "AMQP: solicitacao.criada" --> ACI
     ACI -- "consumidor: avisa motoristas" --> WEB
     WEB -- "mensagem de voz" --> OAI
-    CD -- deploy do .jar --> WEB
 ```
 
-| Componente | Recurso no Azure | Criado por |
-|---|---|---|
-| API Java 21 | App Service Plan Linux (B1) + Web App | `scripts/infra-azure.sh` |
-| Mensageria (opção A) | Azure Container Registry + Azure Container Instance com o RabbitMQ | `scripts/infra-azure.sh` + `dockerfiles/Dockerfile.rabbitmq` |
-| Banco de dados | Oracle da FIAP (PaaS) | `scripts/script-bd.sql` |
-| Build e Release | Azure Pipelines | `azure-pipeline.yml` |
-
-### Arquivos de DevOps
-
-| Arquivo | O que faz |
+| Componente | Recurso no Azure |
 |---|---|
-| [`scripts/infra-azure.sh`](scripts/infra-azure.sh) | Cria, via Azure CLI, o Resource Group, o ACR (com build da imagem do RabbitMQ na nuvem), o ACI do RabbitMQ, o App Service e as variáveis de ambiente da API |
-| [`scripts/destroy-azure.sh`](scripts/destroy-azure.sh) | Apaga o Resource Group inteiro depois da avaliação |
-| [`scripts/azure.env.example`](scripts/azure.env.example) | Modelo das variáveis (copie para `scripts/azure.env`, que fica fora do Git) |
-| [`scripts/script-bd.sql`](scripts/script-bd.sql) | DDL das 12 tabelas no Oracle |
-| [`dockerfiles/Dockerfile.rabbitmq`](dockerfiles/Dockerfile.rabbitmq) | Imagem do RabbitMQ usada no ACI |
-| [`dockerfiles/Dockerfile.api`](dockerfiles/Dockerfile.api) | Imagem da API, alternativa ao App Service |
-| [`azure-pipeline.yml`](azure-pipeline.yml) | Pipeline com os stages **Build** (CI) e **Deploy** (CD) |
+| API Java 21 | App Service Plan Linux (B1) + Web App |
+| Mensageria (opção A) | Container Registry + Container Instance com o RabbitMQ |
+| Banco de dados | Oracle da FIAP (tabelas em `scripts/script-bd.sql`) |
 
 ### Passo a passo
 
-1. **Banco:** rode `scripts/script-bd.sql` no Oracle da FIAP (SQL Developer), com o seu usuário.
-2. **Infraestrutura:** na raiz do repositório, rode:
+Na raiz do repositório, com o [Azure CLI](https://learn.microsoft.com/cli/azure/install-azure-cli) instalado:
+
+1. **Banco:** rode `scripts/script-bd.sql` no Oracle da FIAP.
+2. **Infraestrutura:** copie `scripts/azure.env.example` para `scripts/azure.env`, preencha os valores e rode:
    ```bash
    az login
-   cp scripts/azure.env.example scripts/azure.env   # preencha os valores
    bash scripts/infra-azure.sh
    ```
-3. **Azure DevOps** (https://dev.azure.com):
-   - Crie a organização e um projeto **privado**. Convide o professor com acesso **Basic** na organização e **Project Administrators** no projeto.
-   - Em **Repos**, importe este repositório.
-   - Em **Project settings > Service connections**, crie uma conexão *Azure Resource Manager* chamada `sc-paradacerta`, apontando para o grupo `rg-paradacerta`.
-   - Em **Pipelines > Library**, crie o variable group `paradacerta-secrets` com as variáveis abaixo, todas marcadas como secretas (cadeado), usando os mesmos valores do `azure.env`:
-     - `DB_USERNAME`, `DB_PASSWORD`
-     - `JWT_SECRET`, `HASH_SECRET`
-     - `RABBITMQ_USERNAME`, `RABBITMQ_PASSWORD`
-     - `OPENAI_API_KEY`
-   - Em **Pipelines > New pipeline**, escolha *Azure Repos Git* e *Existing YAML file*, e selecione `/azure-pipeline.yml`.
-   - Em **Repos > Branches > main > Branch policies**, ative:
-     - revisor obrigatório (o próprio aluno pode aprovar);
-     - vínculo obrigatório de work item;
-     - o seu RM como revisor padrão.
-4. **Fluxo do dia a dia:**
-   1. Crie a tarefa no Boards.
-   2. Crie uma branch e faça um commit citando `#<id da tarefa>`.
-   3. Abra um PR para a `main` e faça o merge.
-   4. O Build roda e publica os testes e o `.jar`; o Deploy roda em seguida e publica na Web App.
-   5. Confira o build publicado em `/actuator/info`, nos campos `versao` e `commit`.
+3. **Publicar a API:**
+   ```bash
+   cd citizentech
+   ./mvnw clean package
+   az webapp deploy -n api-paradacerta -g rg-paradacerta --src-path target/citizentech-0.0.1-SNAPSHOT.jar --type jar
+   ```
+4. Confira em `/actuator/health` e no Swagger.
 
-### Variáveis de ambiente
+Para apagar tudo depois da avaliação: `bash scripts/destroy-azure.sh`.
 
-- **Web App:** os segredos ficam nas *App Settings*. São definidos pelo script e atualizados pela pipeline a partir do variable group.
-- **Repositório:** não há senha no código. O `application.yaml` só lê variáveis de ambiente.
-
+Os segredos ficam só nas *App Settings* da Web App e no `scripts/azure.env` (fora do Git). O `application.yaml` lê tudo de variáveis de ambiente.
 
 ## Declaração de uso de IA
 
-Este projeto foi desenvolvido com o apoio de uma ferramenta de IA generativa (Claude, da Anthropic, via Claude Code). Ela ajudou a estruturar o código, os testes e esta documentação, e todo o conteúdo foi revisado pela equipe. Em tempo de execução, a aplicação usa um modelo da OpenAI, via Spring AI, para gerar a mensagem de voz do totem, com uma frase padrão como fallback.
+Este projeto foi desenvolvido com o apoio de uma ferramenta de IA generativa (Claude, da Anthropic, via Claude Code). Ela ajudou a estruturar o código, os testes e esta documentação, e todo o conteúdo foi revisado pela equipe. Ela também foi usada no app Mobile. Em tempo de execução, a aplicação usa um modelo da OpenAI, via Spring AI, para gerar a mensagem de voz do totem, com uma frase padrão como fallback.
