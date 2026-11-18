@@ -9,3 +9,6 @@
 # Sistema operacional
 .DS_Store
 Thumbs.db
+
+# Segredos do deploy no Azure (use scripts/azure.env.example como modelo)
+scripts/azure.env

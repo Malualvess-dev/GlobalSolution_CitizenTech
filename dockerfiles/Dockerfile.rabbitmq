@@ -1,0 +1,14 @@
+# RabbitMQ da Parada Certa (mensageria assincrona, opcao A do Java).
+# Imagem publicada no Azure Container Registry e executada no Azure Container Instance
+# por scripts/infra-azure.sh. Usuario e senha chegam por variavel de ambiente
+# (RABBITMQ_DEFAULT_USER / RABBITMQ_DEFAULT_PASS), nunca ficam na imagem.
+FROM rabbitmq:4.1-management
+
+# A fila, a exchange e a DLQ sao criadas pela propria API (RabbitConfig) ao conectar.
+COPY rabbitmq.conf /etc/rabbitmq/conf.d/20-paradacerta.conf
+
+# 5672: AMQP (API)  |  15672: painel de gerenciamento
+EXPOSE 5672 15672
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=5 \
+	CMD rabbitmq-diagnostics -q ping || exit 1

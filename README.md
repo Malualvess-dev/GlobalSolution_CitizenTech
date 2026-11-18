@@ -28,7 +28,7 @@ Perfis de usuário:
 12. [Guia de integração para o app (front / mobile)](#guia-de-integração-para-o-app-front--mobile)
 13. [Testes](#testes)
 14. [Estrutura do projeto](#estrutura-do-projeto)
-15. [Deploy](#deploy)
+15. [Deploy (Azure + Azure DevOps)](#deploy-azure--azure-devops)
 16. [Declaração de uso de IA](#declaração-de-uso-de-ia)
 
 ---
@@ -481,9 +481,103 @@ citizentech/src/main/java/br/com/fiap/citizentech
 
 ---
 
-## Deploy
+## Deploy (Azure + Azure DevOps)
 
-_Link do deploy: a definir._
+**API publicada:** https://api-paradacerta.azurewebsites.net (Swagger em https://api-paradacerta.azurewebsites.net/swagger-ui.html)
+
+### Arquitetura macro
+
+```mermaid
+flowchart LR
+    subgraph Usuarios
+        APP["App Mobile<br/>(Expo / React Native)<br/>cuidador"]
+        MOT["App do motorista /<br/>painel do gestor"]
+        TOT["Totem ESP32<br/>cartao ou botao"]
+    end
+
+    subgraph DevOps["Azure DevOps"]
+        BOARDS["Azure Boards<br/>tarefas"]
+        REPOS["Azure Repos<br/>main protegida + PR"]
+        CI["Pipeline Build (CI)<br/>Maven + testes JUnit<br/>artefato .jar"]
+        CD["Pipeline Deploy (CD)<br/>AzureWebApp + teste de fumaca"]
+        BOARDS -. vincula .- REPOS
+        REPOS -- merge na main --> CI -- novo artefato --> CD
+    end
+
+    subgraph Azure["Azure - rg-paradacerta (brazilsouth)"]
+        WEB["App Service Linux<br/>Web App Java 21<br/>API Spring Boot"]
+        ACR["Container Registry<br/>imagem do RabbitMQ"]
+        ACI["Container Instance<br/>RabbitMQ 4.1"]
+        ACR --> ACI
+    end
+
+    ORA[("Oracle FIAP<br/>banco PaaS")]
+    OAI["OpenAI<br/>(Spring AI)"]
+
+    APP -- "HTTPS + JWT" --> WEB
+    MOT -- "HTTPS + JWT" --> WEB
+    TOT -- HTTPS --> WEB
+    WEB -- JDBC --> ORA
+    WEB -- "AMQP: solicitacao.criada" --> ACI
+    ACI -- "consumidor: avisa motoristas" --> WEB
+    WEB -- "mensagem de voz" --> OAI
+    CD -- deploy do .jar --> WEB
+```
+
+| Componente | Recurso no Azure | Criado por |
+|---|---|---|
+| API Java 21 | App Service Plan Linux (B1) + Web App | `scripts/infra-azure.sh` |
+| Mensageria (opção A) | Azure Container Registry + Azure Container Instance com o RabbitMQ | `scripts/infra-azure.sh` + `dockerfiles/Dockerfile.rabbitmq` |
+| Banco de dados | Oracle da FIAP (PaaS) | `scripts/script-bd.sql` |
+| Build e Release | Azure Pipelines | `azure-pipeline.yml` |
+
+### Arquivos de DevOps
+
+| Arquivo | O que faz |
+|---|---|
+| [`scripts/infra-azure.sh`](scripts/infra-azure.sh) | Cria, via Azure CLI, o Resource Group, o ACR (com build da imagem do RabbitMQ na nuvem), o ACI do RabbitMQ, o App Service e as variáveis de ambiente da API |
+| [`scripts/destroy-azure.sh`](scripts/destroy-azure.sh) | Apaga o Resource Group inteiro depois da avaliação |
+| [`scripts/azure.env.example`](scripts/azure.env.example) | Modelo das variáveis (copie para `scripts/azure.env`, que fica fora do Git) |
+| [`scripts/script-bd.sql`](scripts/script-bd.sql) | DDL das 12 tabelas no Oracle |
+| [`dockerfiles/Dockerfile.rabbitmq`](dockerfiles/Dockerfile.rabbitmq) | Imagem do RabbitMQ usada no ACI |
+| [`dockerfiles/Dockerfile.api`](dockerfiles/Dockerfile.api) | Imagem da API, alternativa ao App Service |
+| [`azure-pipeline.yml`](azure-pipeline.yml) | Pipeline com os stages **Build** (CI) e **Deploy** (CD) |
+
+### Passo a passo
+
+1. **Banco:** rode `scripts/script-bd.sql` no Oracle da FIAP (SQL Developer), com o seu usuário.
+2. **Infraestrutura:** na raiz do repositório, rode:
+   ```bash
+   az login
+   cp scripts/azure.env.example scripts/azure.env   # preencha os valores
+   bash scripts/infra-azure.sh
+   ```
+3. **Azure DevOps** (https://dev.azure.com):
+   - Crie a organização e um projeto **privado**. Convide o professor com acesso **Basic** na organização e **Project Administrators** no projeto.
+   - Em **Repos**, importe este repositório.
+   - Em **Project settings > Service connections**, crie uma conexão *Azure Resource Manager* chamada `sc-paradacerta`, apontando para o grupo `rg-paradacerta`.
+   - Em **Pipelines > Library**, crie o variable group `paradacerta-secrets` com as variáveis abaixo, todas marcadas como secretas (cadeado), usando os mesmos valores do `azure.env`:
+     - `DB_USERNAME`, `DB_PASSWORD`
+     - `JWT_SECRET`, `HASH_SECRET`
+     - `RABBITMQ_USERNAME`, `RABBITMQ_PASSWORD`
+     - `OPENAI_API_KEY`
+   - Em **Pipelines > New pipeline**, escolha *Azure Repos Git* e *Existing YAML file*, e selecione `/azure-pipeline.yml`.
+   - Em **Repos > Branches > main > Branch policies**, ative:
+     - revisor obrigatório (o próprio aluno pode aprovar);
+     - vínculo obrigatório de work item;
+     - o seu RM como revisor padrão.
+4. **Fluxo do dia a dia:**
+   1. Crie a tarefa no Boards.
+   2. Crie uma branch e faça um commit citando `#<id da tarefa>`.
+   3. Abra um PR para a `main` e faça o merge.
+   4. O Build roda e publica os testes e o `.jar`; o Deploy roda em seguida e publica na Web App.
+   5. Confira o build publicado em `/actuator/info`, nos campos `versao` e `commit`.
+
+### Variáveis de ambiente
+
+- **Web App:** os segredos ficam nas *App Settings*. São definidos pelo script e atualizados pela pipeline a partir do variable group.
+- **Repositório:** não há senha no código. O `application.yaml` só lê variáveis de ambiente.
+
 
 ## Declaração de uso de IA
 

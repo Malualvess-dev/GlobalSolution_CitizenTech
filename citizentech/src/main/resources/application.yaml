@@ -98,6 +98,16 @@ management:
     web:
       exposure:
         include: health,info
+  info:
+    env:
+      enabled: true
+
+# Exibido em /actuator/info: mostra qual build da pipeline esta publicado
+info:
+  app:
+    nome: Parada Certa API
+    versao: ${APP_VERSION:local}
+    commit: ${APP_COMMIT:local}
 
 server:
   port: ${PORT:8080}

@@ -1,0 +1,156 @@
+# =====================================================================
+# PARADA CERTA | Global Solution 2026/2 | Azure Pipelines
+#
+# Stage Build (CI):  compila, roda os testes automaticos (JUnit) e publica o .jar como artefato
+# Stage Deploy (CD): roda sozinho quando o Build gera um novo artefato e publica a API
+#                    na Web App criada por scripts/infra-azure.sh
+#
+# So roda depois do merge na main (via Pull Request). PRs nao disparam a pipeline.
+#
+# Pre-requisitos no Azure DevOps:
+#   - Service connection (Azure Resource Manager) com o nome de "azureSubscription" abaixo
+#   - Library > Variable group "paradacerta-secrets" com as variaveis secretas:
+#       DB_USERNAME, DB_PASSWORD, JWT_SECRET, HASH_SECRET,
+#       RABBITMQ_USERNAME, RABBITMQ_PASSWORD, OPENAI_API_KEY
+#   - Environment "producao" (criado sozinho na primeira execucao)
+# =====================================================================
+
+trigger:
+  branches:
+    include:
+      - main
+  paths:
+    exclude:
+      - README.md
+
+pr: none
+
+variables:
+  - group: paradacerta-secrets
+  - name: azureSubscription
+    value: 'sc-paradacerta'
+  - name: resourceGroup
+    value: 'rg-paradacerta'
+  - name: webAppName
+    value: 'api-paradacerta'
+  - name: projetoDir
+    value: 'citizentech'
+  - name: vmImage
+    value: 'ubuntu-latest'
+  - name: MAVEN_OPTS
+    value: '-Dmaven.repo.local=$(Pipeline.Workspace)/.m2/repository'
+
+stages:
+  # -------------------------------------------------------------------
+  # CI: build + testes + artefato
+  # -------------------------------------------------------------------
+  - stage: Build
+    displayName: 'Build e testes (CI)'
+    jobs:
+      - job: BuildApi
+        displayName: 'Compilar, testar e empacotar a API'
+        pool:
+          vmImage: $(vmImage)
+        steps:
+          - checkout: self
+            fetchDepth: 1
+
+          - task: JavaToolInstaller@0
+            displayName: 'Java 21'
+            inputs:
+              versionSpec: '21'
+              jdkArchitectureOption: 'x64'
+              jdkSourceOption: 'PreInstalled'
+
+          - task: Cache@2
+            displayName: 'Cache das dependencias do Maven'
+            inputs:
+              key: 'maven | "$(Agent.OS)" | $(projetoDir)/pom.xml'
+              restoreKeys: |
+                maven | "$(Agent.OS)"
+              path: $(Pipeline.Workspace)/.m2/repository
+
+          - script: |
+              chmod +x mvnw
+              ./mvnw -B -ntp clean verify
+            displayName: 'Maven: compilar e rodar os testes'
+            workingDirectory: $(projetoDir)
+
+          - task: PublishTestResults@2
+            displayName: 'Publicar resultados dos testes (JUnit)'
+            condition: succeededOrFailed()
+            inputs:
+              testResultsFormat: 'JUnit'
+              testResultsFiles: '$(projetoDir)/target/surefire-reports/TEST-*.xml'
+              testRunTitle: 'Testes da API Parada Certa'
+              failTaskOnFailedTests: true
+
+          - task: CopyFiles@2
+            displayName: 'Separar o pacote da API'
+            inputs:
+              SourceFolder: '$(projetoDir)/target'
+              Contents: 'citizentech-*.jar'
+              TargetFolder: '$(Build.ArtifactStagingDirectory)/api'
+
+          - task: PublishPipelineArtifact@1
+            displayName: 'Publicar artefato (pacote .jar)'
+            inputs:
+              targetPath: '$(Build.ArtifactStagingDirectory)/api'
+              artifact: 'api'
+
+  # -------------------------------------------------------------------
+  # CD: deploy automatico na nuvem depois do novo artefato
+  # -------------------------------------------------------------------
+  - stage: Deploy
+    displayName: 'Deploy no Azure (Release)'
+    dependsOn: Build
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    jobs:
+      - deployment: DeployApi
+        displayName: 'Publicar a API na Web App'
+        pool:
+          vmImage: $(vmImage)
+        environment: 'producao'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - download: current
+                  artifact: api
+                  displayName: 'Baixar o artefato do Build'
+
+                - task: AzureWebApp@1
+                  displayName: 'Deploy do .jar na Web App $(webAppName)'
+                  inputs:
+                    azureSubscription: $(azureSubscription)
+                    appType: 'webAppLinux'
+                    appName: $(webAppName)
+                    resourceGroupName: $(resourceGroup)
+                    package: '$(Pipeline.Workspace)/api/citizentech-*.jar'
+                    runtimeStack: 'JAVA|21-java21'
+                    appSettings: >-
+                      -APP_VERSION "$(Build.BuildNumber)"
+                      -APP_COMMIT "$(Build.SourceVersion)"
+                      -DB_USERNAME "$(DB_USERNAME)"
+                      -DB_PASSWORD "$(DB_PASSWORD)"
+                      -JWT_SECRET "$(JWT_SECRET)"
+                      -HASH_SECRET "$(HASH_SECRET)"
+                      -RABBITMQ_USERNAME "$(RABBITMQ_USERNAME)"
+                      -RABBITMQ_PASSWORD "$(RABBITMQ_PASSWORD)"
+                      -OPENAI_API_KEY "$(OPENAI_API_KEY)"
+
+                - task: AzureCLI@2
+                  displayName: 'Teste de fumaca: API no ar'
+                  inputs:
+                    azureSubscription: $(azureSubscription)
+                    scriptType: 'bash'
+                    scriptLocation: 'inlineScript'
+                    inlineScript: |
+                      set -e
+                      HOST=$(az webapp show -n "$(webAppName)" -g "$(resourceGroup)" --query defaultHostName -o tsv)
+                      echo "Aguardando https://$HOST/actuator/health ..."
+                      curl -fsS --retry 30 --retry-delay 10 --retry-all-errors --max-time 15 "https://$HOST/actuator/health"
+                      echo
+                      curl -fsS "https://$HOST/actuator/info"
+                      echo
+                      echo "API publicada: https://$HOST/swagger-ui.html"
