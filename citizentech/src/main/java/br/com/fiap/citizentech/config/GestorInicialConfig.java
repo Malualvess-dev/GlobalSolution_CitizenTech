@@ -12,11 +12,6 @@ import br.com.fiap.citizentech.model.enums.Perfil;
 import br.com.fiap.citizentech.repository.UsuarioRepository;
 import br.com.fiap.citizentech.service.UsuarioService;
 
-/**
- * Cria o primeiro GESTOR ao subir a aplicacao, se GESTOR_EMAIL e GESTOR_SENHA estiverem definidos
- * e o e-mail ainda nao existir. Sem isso ninguem conseguiria criar motoristas e gestores,
- * porque o registro publico so cria cuidadores.
- */
 @Configuration
 public class GestorInicialConfig {
 

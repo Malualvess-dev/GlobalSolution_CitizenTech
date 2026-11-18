@@ -29,11 +29,6 @@ public class AuthService {
 	private final PasswordEncoder passwordEncoder;
 	private final TokenService tokenService;
 
-	/**
-	 * Confere e-mail e senha (BCrypt) e devolve um JWT.
-	 * A mensagem de erro e a mesma para e-mail inexistente e senha errada,
-	 * para nao revelar quais e-mails estao cadastrados.
-	 */
 	public LoginResponse login(LoginRequest request) {
 		Usuario usuario = usuarioRepository.findByEmail(request.email().trim().toLowerCase())
 				.orElseThrow(() -> new BadCredentialsException(CREDENCIAIS_INVALIDAS));
@@ -46,7 +41,6 @@ public class AuthService {
 		return new LoginResponse(token.valor(), "Bearer", token.expiraEm(), UsuarioResponse.from(usuario));
 	}
 
-	/** Cadastro publico do app: sempre cria um CUIDADOR. */
 	@Transactional
 	public UsuarioResponse registrar(RegistroRequest request) {
 		return usuarioService.criar(new UsuarioRequest(

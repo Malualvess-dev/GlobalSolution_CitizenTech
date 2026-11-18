@@ -14,7 +14,6 @@ import br.com.fiap.citizentech.repository.RotaFrequenteRepository;
 import br.com.fiap.citizentech.security.UsuarioLogado;
 import lombok.RequiredArgsConstructor;
 
-/** Rotas seguem a mesma regra de dono do passageiro: o cuidador so acessa as dos seus passageiros. */
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)

@@ -17,10 +17,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/**
- * Onibus (tabela VEICULO).
- * Simplificacao do MVP: 1 veiculo = 1 linha fixa e 1 motorista fixo.
- */
 @Entity
 @Table(name = "veiculo")
 @Getter
@@ -36,7 +32,6 @@ public class Veiculo {
 	@EqualsAndHashCode.Include
 	private Long id;
 
-	/** Prefixo do onibus na API Olho Vivo (campo "p"). */
 	@Column(name = "prefixo", nullable = false, unique = true, length = 10)
 	private String prefixo;
 
@@ -44,7 +39,6 @@ public class Veiculo {
 	@JoinColumn(name = "linha_id", nullable = false)
 	private Linha linha;
 
-	/** Um motorista dirige no maximo um veiculo por vez (uq_veiculo_motorista). */
 	@OneToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "motorista_id", unique = true)
 	private Usuario motorista;

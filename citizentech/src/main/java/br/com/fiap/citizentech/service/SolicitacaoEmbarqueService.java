@@ -30,18 +30,6 @@ import br.com.fiap.citizentech.repository.SolicitacaoEmbarqueRepository;
 import br.com.fiap.citizentech.repository.TentativaEmbarqueRepository;
 import lombok.RequiredArgsConstructor;
 
-/**
- * Regras da solicitacao de embarque, a entidade central do dominio:
- * <ul>
- * <li>a mesma chave de idempotencia nunca gera duas solicitacoes (RNF02);</li>
- * <li>um passageiro so pode ter uma solicitacao ativa por vez;</li>
- * <li>so totens ATIVOS podem abrir solicitacoes;</li>
- * <li>solicitacoes em estado final (EMBARCADO, SEM_ONIBUS, CANCELADA) nao mudam mais.</li>
- * </ul>
- * Quando a solicitacao chega sem mensagem de voz, a IA ({@link MensagemVozService}) escreve a frase
- * que o totem vai falar ao passageiro.
- * Depois do commit, um evento vai para o RabbitMQ e o motorista e avisado de forma assincrona.
- */
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -56,7 +44,6 @@ public class SolicitacaoEmbarqueService {
 	private final MensagemVozService mensagemVozService;
 	private final ApplicationEventPublisher eventPublisher;
 
-	/** Lista todas as solicitacoes ou, se o status for informado, so as desse status. */
 	public Page<SolicitacaoEmbarqueResponse> listar(StatusSolicitacao status, Pageable pageable) {
 		Page<SolicitacaoEmbarque> pagina = status != null
 				? solicitacaoRepository.findByStatus(status, pageable)
@@ -102,7 +89,7 @@ public class SolicitacaoEmbarqueService {
 		}
 
 		SolicitacaoEmbarque salva = solicitacaoRepository.save(solicitacao);
-		// Vai para o RabbitMQ so depois do commit (ver SolicitacaoEventPublisher)
+
 		eventPublisher.publishEvent(new SolicitacaoCriadaEvent(
 				salva.getId(),
 				totem.getId(),
@@ -142,14 +129,12 @@ public class SolicitacaoEmbarqueService {
 				.toList();
 	}
 
-	/** Historico gravado pelo gatilho do Oracle. Funciona mesmo depois que a solicitacao foi excluida. */
 	public List<AuditoriaSolicitacaoResponse> listarAuditoria(Long solicitacaoId) {
 		return auditoriaRepository.findBySolicitacaoIdOrderByDataHoraAsc(solicitacaoId).stream()
 				.map(AuditoriaSolicitacaoResponse::from)
 				.toList();
 	}
 
-	/** Monta o que a IA precisa saber, sem nenhum dado pessoal do passageiro. */
 	private ContextoMensagemVoz contextoDaMensagem(SolicitacaoEmbarque solicitacao) {
 		Passageiro passageiro = solicitacao.getPassageiro();
 		Linha linha = solicitacao.getLinha();

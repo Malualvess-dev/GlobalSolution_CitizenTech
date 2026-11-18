@@ -10,12 +10,6 @@ import javax.crypto.spec.SecretKeySpec;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-/**
- * Gera o hash HMAC-SHA256 (64 caracteres hexadecimais) do UID do cartao e do token do totem.
- * <p>
- * Usa um segredo da aplicacao (variavel HASH_SECRET), como recomenda o script do banco:
- * SHA-256 puro de um UID de 4 bytes seria facil de quebrar por forca bruta.
- */
 @Service
 public class HashService {
 

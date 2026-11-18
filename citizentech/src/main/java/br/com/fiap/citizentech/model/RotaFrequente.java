@@ -17,9 +17,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/**
- * Rota que o passageiro costuma fazer: parada de origem + linha (tabela ROTA_FREQUENTE).
- */
 @Entity
 @Table(name = "rota_frequente", uniqueConstraints = @UniqueConstraint(
 		name = "uq_rota_pass_parada_linha",
@@ -49,7 +46,6 @@ public class RotaFrequente {
 	@JoinColumn(name = "linha_id", nullable = false)
 	private Linha linha;
 
-	/** Nome amigavel da rota, ex.: Casa -> UBS. */
 	@Column(name = "apelido", length = 60)
 	private String apelido;
 

@@ -13,16 +13,6 @@ import br.com.fiap.citizentech.repository.SolicitacaoEmbarqueRepository;
 import br.com.fiap.citizentech.repository.TentativaEmbarqueRepository;
 import lombok.RequiredArgsConstructor;
 
-/**
- * Avisa os motoristas sobre uma nova solicitacao. Chamado pelo consumidor do RabbitMQ.
- * <p>
- * Registra uma {@link TentativaEmbarque} PENDENTE para a linha pedida e muda a solicitacao
- * para MOTORISTA_AVISADO. Sem a previsao de chegada da Olho Vivo, o alerta vai para a linha toda
- * (veiculo NULL, como preve a RNF10) e os apps dos motoristas da linha exibem o pedido.
- * <p>
- * Idempotente: o RabbitMQ pode entregar a mesma mensagem mais de uma vez, entao uma
- * solicitacao que ja saiu de CRIADA e ignorada.
- */
 @Service
 @RequiredArgsConstructor
 public class AvisoMotoristaService {
@@ -39,12 +29,13 @@ public class AvisoMotoristaService {
 			log.warn("Solicitacao {} nao existe mais; evento ignorado", solicitacaoId);
 			return;
 		}
+		// O RabbitMQ pode entregar a mesma mensagem mais de uma vez
 		if (solicitacao.getStatus() != StatusSolicitacao.CRIADA) {
 			log.info("Solicitacao {} ja esta como {}; evento repetido ignorado", solicitacaoId, solicitacao.getStatus());
 			return;
 		}
+		// Pedido pelo botao sem linha: fica para o gestor
 		if (solicitacao.getLinha() == null) {
-			// Pedido pelo botao, sem cartao: a linha ainda nao e conhecida e o pedido fica para o gestor
 			log.info("Solicitacao {} sem linha definida; nenhum motorista avisado", solicitacaoId);
 			return;
 		}

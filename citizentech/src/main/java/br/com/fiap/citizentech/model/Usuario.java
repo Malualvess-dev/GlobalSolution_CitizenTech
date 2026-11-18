@@ -22,9 +22,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/**
- * Usuario do sistema: cuidador, motorista ou gestor (tabela USUARIO).
- */
 @Entity
 @Table(name = "usuario")
 @Getter
@@ -46,7 +43,6 @@ public class Usuario {
 	@Column(name = "email", nullable = false, unique = true, length = 160)
 	private String email;
 
-	/** Hash BCrypt da senha. A senha pura nunca e gravada. */
 	@Column(name = "senha_hash", nullable = false, length = 100)
 	private String senhaHash;
 
@@ -54,7 +50,6 @@ public class Usuario {
 	@Column(name = "perfil", nullable = false, length = 10)
 	private Perfil perfil;
 
-	/** Token do Expo Push para notificacoes no app (RF14). */
 	@Column(name = "expo_push_token", length = 200)
 	private String expoPushToken;
 
@@ -62,7 +57,6 @@ public class Usuario {
 	@Column(name = "criado_em", nullable = false, updatable = false)
 	private LocalDateTime criadoEm;
 
-	/** O e-mail e sempre gravado em minusculas, como pede o modelo do banco. */
 	@PrePersist
 	@PreUpdate
 	private void normalizarEmail() {

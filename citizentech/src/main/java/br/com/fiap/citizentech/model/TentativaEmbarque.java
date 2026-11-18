@@ -23,13 +23,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/**
- * Cada tentativa de atendimento de uma solicitacao por um onibus (tabela TENTATIVA_EMBARQUE).
- * <p>
- * veiculo NULL = a previsao falhou e o alerta foi para a linha toda (RNF10).
- * O motorista fica gravado aqui porque o motorista do veiculo muda com o tempo.
- * confirmadoEm so e preenchido quando o resultado e EMBARCADO (ck_tentativa_confirmado).
- */
 @Entity
 @Table(name = "tentativa_embarque")
 @Getter
@@ -61,7 +54,6 @@ public class TentativaEmbarque {
 	@JoinColumn(name = "motorista_id")
 	private Usuario motorista;
 
-	/** NULL quando a Olho Vivo ou o modelo de previsao nao responderam. */
 	@Column(name = "previsao_chegada")
 	private LocalDateTime previsaoChegada;
 

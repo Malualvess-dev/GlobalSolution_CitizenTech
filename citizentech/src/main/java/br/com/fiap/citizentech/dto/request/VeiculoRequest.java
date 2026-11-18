@@ -13,6 +13,5 @@ public record VeiculoRequest(
 		@NotNull(message = "A linha e obrigatoria")
 		Long linhaId,
 
-		/** Opcional: o veiculo pode ficar sem motorista. */
 		Long motoristaId) {
 }

@@ -5,7 +5,6 @@ import java.time.LocalDateTime;
 import br.com.fiap.citizentech.model.Usuario;
 import br.com.fiap.citizentech.model.enums.Perfil;
 
-/** Dados publicos do usuario. O hash da senha nunca sai da API. */
 public record UsuarioResponse(
 		Long id,
 		String nome,

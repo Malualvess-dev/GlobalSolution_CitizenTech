@@ -8,23 +8,11 @@ import org.springframework.stereotype.Service;
 import br.com.fiap.citizentech.model.enums.TipoNecessidade;
 import br.com.fiap.citizentech.model.enums.TipoSinal;
 
-/**
- * Funcionalidade de IA generativa da Parada Certa (Spring AI + OpenAI).
- * <p>
- * Quando uma solicitacao de embarque e criada, o LLM escreve a frase que o totem
- * fala ao passageiro, adaptada ao tipo de necessidade, a linha e ao destino.
- * Ex.: para BAIXA_VISAO, orienta a ficar perto do totem e avisa que o onibus sera anunciado;
- * para CADEIRA_DE_RODAS, avisa que o motorista vai preparar a rampa.
- * <p>
- * Se a OpenAI falhar ou demorar, entra uma frase padrao montada aqui mesmo:
- * o totem nunca fica sem resposta.
- */
 @Service
 public class MensagemVozService {
 
 	private static final Logger log = LoggerFactory.getLogger(MensagemVozService.class);
 
-	/** Mesmo tamanho da coluna solicitacao_embarque.mensagem_voz. */
 	static final int TAMANHO_MAXIMO = 300;
 
 	private static final String INSTRUCOES = """
@@ -84,7 +72,6 @@ public class MensagemVozService {
 		return mensagemPadrao(contexto);
 	}
 
-	/** Frase usada quando a IA nao responde. Segue as mesmas regras do prompt. */
 	String mensagemPadrao(ContextoMensagemVoz contexto) {
 		StringBuilder frase = new StringBuilder("Pedido de embarque registrado");
 		if (contexto.letreiroLinha() != null) {
@@ -108,7 +95,6 @@ public class MensagemVozService {
 		};
 	}
 
-	/** Tira aspas e quebras de linha e corta no limite da coluna, sem partir palavras. */
 	static String limpar(String resposta) {
 		if (resposta == null) {
 			return "";

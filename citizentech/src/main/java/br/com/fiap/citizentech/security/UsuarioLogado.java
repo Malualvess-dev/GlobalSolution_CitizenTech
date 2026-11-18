@@ -4,10 +4,6 @@ import org.springframework.security.oauth2.jwt.Jwt;
 
 import br.com.fiap.citizentech.model.enums.Perfil;
 
-/**
- * Quem esta chamando a API, lido do token JWT validado.
- * Os services usam para aplicar as regras de dono (ex.: cuidador so ve os proprios passageiros).
- */
 public record UsuarioLogado(Long id, Perfil perfil) {
 
 	public static UsuarioLogado from(Jwt jwt) {

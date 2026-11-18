@@ -25,10 +25,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/**
- * Cada sinal aceito de cartao ou botao recebido do totem (tabela SINAL_TOTEM).
- * O uid_hash e obrigatorio quando o tipo e CARTAO (ck_sinal_uid).
- */
 @Entity
 @Table(name = "sinal_totem")
 @Getter
@@ -59,7 +55,6 @@ public class SinalTotem {
 	@Column(name = "uid_hash", length = 64)
 	private String uidHash;
 
-	/** Preenchida quando a API Java processa o sinal e cria a solicitacao. */
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "solicitacao_id")
 	private SolicitacaoEmbarque solicitacao;

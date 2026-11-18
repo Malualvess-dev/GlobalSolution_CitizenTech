@@ -25,13 +25,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/**
- * Pedido de embarque feito no totem (tabela SOLICITACAO_EMBARQUE). Entidade central do dominio.
- * <p>
- * Passageiro e linha sao opcionais: o botao do totem funciona sem cartao.
- * Se o passageiro for excluido, a solicitacao fica anonima (passageiro_id NULL)
- * para preservar indicadores e auditoria.
- */
 @Entity
 @Table(name = "solicitacao_embarque")
 @Getter
@@ -68,11 +61,9 @@ public class SolicitacaoEmbarque {
 	@Column(name = "status", nullable = false, length = 20)
 	private StatusSolicitacao status = StatusSolicitacao.CRIADA;
 
-	/** Garante que o mesmo sinal nao gere duas solicitacoes (RNF02). */
 	@Column(name = "chave_idempotencia", nullable = false, unique = true, length = 80)
 	private String chaveIdempotencia;
 
-	/** Texto falado pelo totem ao passageiro. */
 	@Column(name = "mensagem_voz", length = 300)
 	private String mensagemVoz;
 

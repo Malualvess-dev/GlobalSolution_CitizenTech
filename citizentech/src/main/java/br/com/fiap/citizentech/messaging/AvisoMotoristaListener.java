@@ -10,12 +10,6 @@ import br.com.fiap.citizentech.config.RabbitConfig;
 import br.com.fiap.citizentech.service.AvisoMotoristaService;
 import lombok.RequiredArgsConstructor;
 
-/**
- * Consumidor assincrono da fila citizentech.solicitacao.criada.
- * <p>
- * Roda em outra thread, depois que o totem ja recebeu a resposta: o aviso ao motorista
- * nao atrasa o pedido do passageiro. Se o processamento falhar 3 vezes, a mensagem vai para a DLQ.
- */
 @Component
 @ConditionalOnProperty(name = "citizentech.mensageria.modo", havingValue = "rabbit", matchIfMissing = true)
 @RequiredArgsConstructor

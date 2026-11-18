@@ -12,7 +12,6 @@ public interface CartaoRepository extends JpaRepository<Cartao, Long> {
 
 	Page<Cartao> findByPassageiroId(Long passageiroId, Pageable pageable);
 
-	/** Usado para o cuidador listar so os registros dos proprios passageiros. */
 	Page<Cartao> findByPassageiroCuidadorId(Long cuidadorId, Pageable pageable);
 
 	Optional<Cartao> findByUidHashAndAtivoTrue(String uidHash);
