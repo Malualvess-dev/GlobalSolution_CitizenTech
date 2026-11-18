@@ -6,7 +6,7 @@
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
 		<version>4.1.2</version>
-		<relativePath/> <!-- lookup parent from repository -->
+		<relativePath/>
 	</parent>
 	<groupId>br.com.fiap</groupId>
 	<artifactId>citizentech</artifactId>
@@ -17,7 +17,7 @@
 		<java.version>21</java.version>
 		<spring-ai.version>2.0.1</spring-ai.version>
 		<springdoc.version>3.2.0</springdoc.version>
-		<!-- O Spring AI traz uma swagger-annotations mais antiga que quebra o SpringDoc -->
+		<!-- Versao do Spring AI quebra o SpringDoc -->
 		<swagger-core.version>2.2.55</swagger-core.version>
 	</properties>
 	<dependencies>
@@ -65,7 +65,6 @@
 			<scope>runtime</scope>
 			<optional>true</optional>
 		</dependency>
-		<!-- Banco em memoria dos testes e do perfil dev (para rodar sem o Oracle) -->
 		<dependency>
 			<groupId>com.h2database</groupId>
 			<artifactId>h2</artifactId>

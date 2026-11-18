@@ -71,7 +71,7 @@ public class TotemService {
 		totem.setParada(paradaService.buscarEntidade(request.paradaId()));
 		totem.setIdentificador(identificador);
 		totem.setStatus(request.status() != null ? request.status() : StatusTotem.ATIVO);
-		// Na atualizacao o token e opcional: so troca o hash quando um novo token e enviado
+
 		if (request.token() != null && !request.token().isBlank()) {
 			totem.setTokenHash(hashService.hmacSha256(request.token()));
 		}

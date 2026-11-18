@@ -19,10 +19,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.transaction.annotation.Transactional;
 
-/**
- * Testa a seguranca com tokens de verdade: registro, login, validacao do JWT,
- * papeis e a regra de dono dos passageiros.
- */
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
@@ -81,11 +77,9 @@ class SecurityIntegrationTest {
 		registrar("bia@teste.com");
 		String token = login("bia@teste.com");
 
-		// cuidador pode consultar paradas...
 		mockMvc.perform(get("/api/paradas").header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
 				.andExpect(status().isOk());
 
-		// ...mas nao pode listar usuarios nem cadastrar paradas
 		mockMvc.perform(get("/api/usuarios").header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
 				.andExpect(status().isForbidden())
 				.andExpect(jsonPath("$.status").value(403));
@@ -105,21 +99,17 @@ class SecurityIntegrationTest {
 		long passageiroDeA = extrairId(criarPassageiro(tokenA, cuidadorA)
 				.andExpect(status().isCreated()));
 
-		// B nao enxerga o passageiro de A
 		mockMvc.perform(get("/api/passageiros/{id}", passageiroDeA)
 				.header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenB))
 				.andExpect(status().isForbidden());
 
-		// B nao cadastra passageiro em nome de A
 		criarPassageiro(tokenB, cuidadorA).andExpect(status().isForbidden());
 
-		// a listagem de B volta vazia, mesmo pedindo os de A
 		mockMvc.perform(get("/api/passageiros").param("cuidadorId", String.valueOf(cuidadorA))
 				.header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenB))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.page.totalElements").value(0));
 
-		// A continua vendo o proprio passageiro
 		mockMvc.perform(get("/api/passageiros/{id}", passageiroDeA)
 				.header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenA))
 				.andExpect(status().isOk());

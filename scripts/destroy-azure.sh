@@ -1,16 +1,10 @@
 #!/usr/bin/env bash
-# =====================================================================
-# PARADA CERTA | Remove TODOS os recursos criados por infra-azure.sh
-# (apaga o Resource Group inteiro). Use depois da avaliacao para nao gastar creditos.
-#
-#   bash scripts/destroy-azure.sh
-# =====================================================================
+# Apaga o Resource Group inteiro criado por infra-azure.sh
 set -euo pipefail
 
 DIR_SCRIPT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 if [[ -f "$DIR_SCRIPT/azure.env" ]]; then
 	set -a
-	# shellcheck disable=SC1091
 	source "$DIR_SCRIPT/azure.env"
 	set +a
 fi

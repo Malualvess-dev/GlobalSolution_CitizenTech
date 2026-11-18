@@ -2,14 +2,12 @@ spring:
   application:
     name: citizentech
 
-  # ---------- Banco de dados (Oracle FIAP) ----------
   datasource:
     url: ${DB_URL:jdbc:oracle:thin:@oracle.fiap.com.br:1521:ORCL}
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     driver-class-name: oracle.jdbc.OracleDriver
   jpa:
-    # As tabelas ja existem no Oracle (script DDL): o Hibernate so confere o mapeamento.
     hibernate:
       ddl-auto: ${DDL_AUTO:validate}
     open-in-view: false
@@ -18,14 +16,11 @@ spring:
       hibernate:
         format_sql: true
 
-  # ---------- Paginacao ----------
-  # Serializa Page como { content, page: { size, number, totalElements, totalPages } }
   data:
     web:
       pageable:
         serialization-mode: via-dto
 
-  # ---------- Mensageria (Requisito 5 - Opcao A: RabbitMQ) ----------
   rabbitmq:
     host: ${RABBITMQ_HOST:localhost}
     port: ${RABBITMQ_PORT:5672}
@@ -33,7 +28,6 @@ spring:
     password: ${RABBITMQ_PASSWORD:guest}
     listener:
       simple:
-        # Ate 3 tentativas no consumidor; depois a mensagem e rejeitada e vai para a DLQ
         default-requeue-rejected: false
         retry:
           enabled: true
@@ -41,7 +35,6 @@ spring:
           initial-interval: 1s
           multiplier: 2
 
-  # ---------- Spring AI (OpenAI) ----------
   ai:
     openai:
       api-key: ${OPENAI_API_KEY}
@@ -49,7 +42,6 @@ spring:
         options:
           model: ${OPENAI_MODEL:gpt-4o-mini}
           temperature: 0.3
-    # O totem espera a resposta: no maximo 2 tentativas rapidas e depois cai na frase padrao
     retry:
       max-attempts: 2
       backoff:
@@ -57,42 +49,34 @@ spring:
         multiplier: 2
         max-interval: 1s
 
-  # ---------- Timeouts das chamadas HTTP externas (OpenAI) ----------
   http:
     clients:
       connect-timeout: 3s
       read-timeout: 10s
 
 citizentech:
-  # rabbit (padrao): evento vai para o RabbitMQ | local: aviso roda na propria API (perfil dev)
+  # rabbit (padrao) ou local (sem fila, perfil dev)
   mensageria:
     modo: ${MENSAGERIA_MODO:rabbit}
-  # Origens liberadas no CORS, separadas por virgula (ex.: http://localhost:8081)
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:*}
-  # ---------- Seguranca (JWT) ----------
   jwt:
-    # Chave HMAC com no minimo 32 caracteres (256 bits)
     secret: ${JWT_SECRET}
     expiration-minutes: ${JWT_EXPIRATION_MINUTES:120}
     issuer: citizentech-api
-  # ---------- Hash do UID do cartao e do token do totem ----------
   hash:
     secret: ${HASH_SECRET}
-  # ---------- Primeiro gestor (opcional, criado ao subir se nao existir) ----------
   gestor-inicial:
     nome: ${GESTOR_NOME:Gestor}
     email: ${GESTOR_EMAIL:}
     senha: ${GESTOR_SENHA:}
 
-# ---------- Swagger / OpenAPI ----------
 springdoc:
   swagger-ui:
     path: /swagger-ui.html
   api-docs:
     path: /v3/api-docs
 
-# ---------- Actuator (health check usado no deploy da Azure) ----------
 management:
   endpoints:
     web:
@@ -102,7 +86,6 @@ management:
     env:
       enabled: true
 
-# Exibido em /actuator/info: mostra qual build da pipeline esta publicado
 info:
   app:
     nome: Parada Certa API

@@ -1,11 +1,3 @@
-# API Parada Certa (Java 21 / Spring Boot) em container.
-# Alternativa ao App Service: a pipeline publica o .jar direto na Web App, mas a mesma API
-# pode rodar em container (ACI ou Web App for Containers) com esta imagem.
-#
-# Build (na raiz do repositorio):  docker build -f dockerfiles/Dockerfile.api -t citizentech-api .
-# No Azure, sem Docker local:      az acr build -r <acr> -t citizentech-api:latest -f dockerfiles/Dockerfile.api .
-
-# ---------- Etapa 1: build com Maven (os testes rodam na pipeline de CI) ----------
 FROM maven:3.9-eclipse-temurin-21 AS build
 WORKDIR /app
 COPY citizentech/pom.xml .
@@ -13,17 +5,14 @@ RUN mvn -B -q dependency:go-offline
 COPY citizentech/src ./src
 RUN mvn -B -q package -DskipTests
 
-# ---------- Etapa 2: imagem final so com o JRE ----------
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 
-# Usuario sem privilegios de root
 RUN addgroup -S app && adduser -S app -G app
 USER app
 
 COPY --from=build /app/target/*.jar app.jar
 
-# Segredos (DB_*, JWT_SECRET, HASH_SECRET, RABBITMQ_*, OPENAI_API_KEY) chegam por variavel de ambiente
 ENV PORT=8080 \
 	JAVA_OPTS="-XX:MaxRAMPercentage=75"
 EXPOSE 8080

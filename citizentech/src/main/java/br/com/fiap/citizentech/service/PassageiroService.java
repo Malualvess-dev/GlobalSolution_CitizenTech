@@ -17,10 +17,6 @@ import br.com.fiap.citizentech.repository.PassageiroRepository;
 import br.com.fiap.citizentech.security.UsuarioLogado;
 import lombok.RequiredArgsConstructor;
 
-/**
- * Passageiros assistidos. Dado sensivel (LGPD): um CUIDADOR so enxerga e altera
- * os passageiros que ele mesmo cadastrou; o GESTOR enxerga todos.
- */
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -29,7 +25,6 @@ public class PassageiroService {
 	private final PassageiroRepository passageiroRepository;
 	private final UsuarioService usuarioService;
 
-	/** Gestor: todos ou os do cuidador informado. Cuidador: sempre so os dele. */
 	public Page<PassageiroResponse> listar(Long cuidadorId, Pageable pageable, UsuarioLogado usuario) {
 		Long filtro = usuario.isCuidador() ? usuario.id() : cuidadorId;
 		Page<Passageiro> pagina = filtro != null
@@ -57,8 +52,8 @@ public class PassageiroService {
 		verificarCuidadorDoRequest(request, usuario);
 		boolean novaVersaoDoTermo = !passageiro.getVersaoTermo().equals(request.versaoTermo().trim());
 		preencher(passageiro, request);
+		// LGPD: nova versao do termo registra um novo consentimento
 		if (novaVersaoDoTermo) {
-			// LGPD: aceite de uma nova versao do termo registra um novo consentimento
 			passageiro.setConsentimentoEm(LocalDateTime.now());
 		}
 		return PassageiroResponse.from(passageiro);
@@ -74,14 +69,12 @@ public class PassageiroService {
 				.orElseThrow(() -> new RecursoNaoEncontradoException("Passageiro", id));
 	}
 
-	/** Busca o passageiro e confere se o usuario logado pode acessa-lo. */
 	public Passageiro buscarComAcesso(Long id, UsuarioLogado usuario) {
 		Passageiro passageiro = buscarEntidade(id);
 		verificarAcesso(passageiro, usuario);
 		return passageiro;
 	}
 
-	/** Cuidador so acessa os proprios passageiros. Usado tambem por cartoes e rotas frequentes. */
 	public void verificarAcesso(Passageiro passageiro, UsuarioLogado usuario) {
 		if (usuario.isCuidador() && !passageiro.getCuidador().getId().equals(usuario.id())) {
 			throw new AccessDeniedException("Este passageiro pertence a outro cuidador");

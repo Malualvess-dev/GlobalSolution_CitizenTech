@@ -1,20 +1,4 @@
-# =====================================================================
-# PARADA CERTA | Global Solution 2026/2 | Azure Pipelines
-#
-# Stage Build (CI):  compila, roda os testes automaticos (JUnit) e publica o .jar como artefato
-# Stage Deploy (CD): roda sozinho quando o Build gera um novo artefato e publica a API
-#                    na Web App criada por scripts/infra-azure.sh
-#
-# So roda depois do merge na main (via Pull Request). PRs nao disparam a pipeline.
-#
-# Pre-requisitos no Azure DevOps:
-#   - Service connection (Azure Resource Manager) com o nome de "azureSubscription" abaixo
-#   - Library > Variable group "paradacerta-secrets" com as variaveis secretas:
-#       DB_USERNAME, DB_PASSWORD, JWT_SECRET, HASH_SECRET,
-#       RABBITMQ_USERNAME, RABBITMQ_PASSWORD, OPENAI_API_KEY
-#   - Environment "producao" (criado sozinho na primeira execucao)
-# =====================================================================
-
+# Segredos: variable group paradacerta-secrets. Conexao com o Azure: sc-paradacerta.
 trigger:
   branches:
     include:
@@ -41,9 +25,6 @@ variables:
     value: '-Dmaven.repo.local=$(Pipeline.Workspace)/.m2/repository'
 
 stages:
-  # -------------------------------------------------------------------
-  # CI: build + testes + artefato
-  # -------------------------------------------------------------------
   - stage: Build
     displayName: 'Build e testes (CI)'
     jobs:
@@ -98,9 +79,6 @@ stages:
               targetPath: '$(Build.ArtifactStagingDirectory)/api'
               artifact: 'api'
 
-  # -------------------------------------------------------------------
-  # CD: deploy automatico na nuvem depois do novo artefato
-  # -------------------------------------------------------------------
   - stage: Deploy
     displayName: 'Deploy no Azure (Release)'
     dependsOn: Build

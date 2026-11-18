@@ -14,10 +14,8 @@ public record TotemRequest(
 		@Size(max = 30, message = "O identificador deve ter no maximo 30 caracteres")
 		String identificador,
 
-		/** Segredo do dispositivo. Obrigatorio no cadastro; na atualizacao, so quando for trocar. */
 		@Size(min = 16, max = 200, message = "O token deve ter entre 16 e 200 caracteres")
 		String token,
 
-		/** Opcional: quando nao informado, o totem fica ATIVO. */
 		StatusTotem status) {
 }

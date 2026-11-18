@@ -29,11 +29,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import br.com.fiap.citizentech.messaging.SolicitacaoCriadaEvent;
 
-/**
- * Testa os endpoints de ponta a ponta (controller -> service -> repository -> H2).
- * Cada teste roda em uma transacao desfeita no final, entao um nao interfere no outro.
- * As chamadas usam um token de GESTOR, que tem acesso a todos os cadastros.
- */
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
@@ -95,12 +90,10 @@ class CrudIntegrationTest {
 				{"nome": "Joao", "email": "joao@teste.com", "senha": "senha12345", "perfil": "MOTORISTA"}
 				""");
 
-		// sem aceite do termo: 400
 		enviar("/api/passageiros", passageiroJson(motoristaId, false))
 				.andExpect(status().isBadRequest())
 				.andExpect(jsonPath("$.campos[*].campo", hasItem("consentimento")));
 
-		// com aceite, mas o usuario nao e CUIDADOR: 422
 		enviar("/api/passageiros", passageiroJson(motoristaId, true))
 				.andExpect(status().isUnprocessableContent());
 	}
@@ -120,21 +113,17 @@ class CrudIntegrationTest {
 
 		long solicitacaoId = criar("/api/solicitacoes", solicitacaoJson(totemId, passageiroId, "chave-1"));
 
-		// mesmo passageiro com outra solicitacao ativa: 409
 		enviar("/api/solicitacoes", solicitacaoJson(totemId, passageiroId, "chave-2"))
 				.andExpect(status().isConflict());
 
-		// encerra a solicitacao e tenta mudar de novo: 422
 		mudarStatus(solicitacaoId, "EMBARCADO").andExpect(status().isOk())
 				.andExpect(jsonPath("$.status").value("EMBARCADO"));
 		mudarStatus(solicitacaoId, "CANCELADA").andExpect(status().isUnprocessableContent());
 
-		// com a anterior encerrada, o passageiro pode abrir outra
 		enviar("/api/solicitacoes", solicitacaoJson(totemId, passageiroId, "chave-3"))
 				.andExpect(status().isCreated());
 	}
 
-	/** Token JWT simulado de um GESTOR (o login de verdade e testado em SecurityIntegrationTest). */
 	private RequestPostProcessor gestor() {
 		return jwt().jwt(token -> token.subject("1").claim("perfil", "GESTOR"))
 				.authorities(new SimpleGrantedAuthority("ROLE_GESTOR"));
@@ -152,7 +141,6 @@ class CrudIntegrationTest {
 				{"paradaId": %d, "identificador": "TOTEM-0002", "token": "token-secreto-do-totem"}
 				""".formatted(paradaId));
 
-		// no perfil de teste a OpenAI nao responde, entao a solicitacao recebe a frase padrao
 		enviar("/api/solicitacoes", """
 				{"totemId": %d, "linhaId": %d, "tipoSinal": "BOTAO", "chaveIdempotencia": "chave-voz"}
 				""".formatted(totemId, linhaId))
@@ -160,7 +148,6 @@ class CrudIntegrationTest {
 				.andExpect(jsonPath("$.mensagemVoz").value("Pedido de embarque registrado para a linha 6091-10, "
 						+ "sentido Terminal Varginha. Aguarde na parada, o motorista do proximo onibus sera avisado."));
 
-		// o evento para o RabbitMQ foi disparado (o envio em si acontece depois do commit)
 		assertThat(eventos.stream(SolicitacaoCriadaEvent.class))
 				.singleElement()
 				.satisfies(evento -> {
@@ -197,7 +184,6 @@ class CrudIntegrationTest {
 				.content(json));
 	}
 
-	/** Faz o POST, confere o 201 e devolve o id do registro criado. */
 	private long criar(String url, String json) throws Exception {
 		String corpo = enviar(url, json)
 				.andExpect(status().isCreated())

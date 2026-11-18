@@ -33,14 +33,6 @@ import br.com.fiap.citizentech.repository.VeiculoRepository;
 import br.com.fiap.citizentech.service.HashService;
 import lombok.RequiredArgsConstructor;
 
-/**
- * Dados de exemplo do perfil dev, para o time do front testar o app sem montar nada a mao.
- * O banco do perfil dev e o H2 em memoria, entao tudo e recriado a cada vez que a API sobe.
- * <p>
- * Usuarios criados (senha entre parenteses):
- * gestor@paradacerta.com (Gestor@123), cuidador@paradacerta.com (Cuidador@123) e
- * motorista@paradacerta.com (Motorista@123).
- */
 @Component
 @Profile("dev")
 @RequiredArgsConstructor
@@ -48,9 +40,8 @@ public class DevDataSeeder implements ApplicationRunner {
 
 	private static final Logger log = LoggerFactory.getLogger(DevDataSeeder.class);
 
-	/** Token do totem de exemplo, como o ESP32 enviaria. No banco fica so o hash. */
 	public static final String TOKEN_TOTEM_EXEMPLO = "token-totem-0001";
-	/** UID do cartao de exemplo, como o leitor RFID do totem leria. */
+
 	public static final String UID_CARTAO_EXEMPLO = "04A1B2C3";
 
 	private final UsuarioRepository usuarioRepository;

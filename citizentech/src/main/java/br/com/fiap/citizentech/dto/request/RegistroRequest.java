@@ -4,10 +4,6 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-/**
- * Cadastro publico feito pelo app: cria sempre um CUIDADOR.
- * Motoristas e gestores so podem ser criados por um gestor, em /api/usuarios.
- */
 public record RegistroRequest(
 
 		@NotBlank(message = "O nome e obrigatorio")

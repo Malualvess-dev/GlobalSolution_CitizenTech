@@ -22,7 +22,6 @@ public record PassageiroRequest(
 		@Size(max = 40, message = "O contato de emergencia deve ter no maximo 40 caracteres")
 		String contatoEmergencia,
 
-		/** LGPD: o cuidador precisa aceitar o termo para o passageiro ser cadastrado. */
 		@NotNull(message = "O aceite do termo de consentimento e obrigatorio")
 		@AssertTrue(message = "O cuidador precisa aceitar o termo de consentimento")
 		Boolean consentimento,

@@ -25,9 +25,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/**
- * Dispositivo ESP32 instalado na parada (tabela TOTEM).
- */
 @Entity
 @Table(name = "totem")
 @Getter
@@ -47,11 +44,9 @@ public class Totem {
 	@JoinColumn(name = "parada_id", nullable = false)
 	private Parada parada;
 
-	/** Identificador fisico do dispositivo, ex.: TOTEM-0001. */
 	@Column(name = "identificador", nullable = false, unique = true, length = 30)
 	private String identificador;
 
-	/** Hash do token de autenticacao do dispositivo. */
 	@JdbcTypeCode(SqlTypes.CHAR)
 	@Column(name = "token_hash", nullable = false, length = 64)
 	private String tokenHash;

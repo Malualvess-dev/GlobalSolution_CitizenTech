@@ -21,9 +21,6 @@ import br.com.fiap.citizentech.dto.response.ErroResponse;
 import br.com.fiap.citizentech.dto.response.ErroResponse.CampoInvalido;
 import jakarta.servlet.http.HttpServletRequest;
 
-/**
- * Converte as excecoes da aplicacao em respostas JSON no formato {@link ErroResponse}.
- */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -44,7 +41,6 @@ public class GlobalExceptionHandler {
 		return responder(HttpStatus.UNPROCESSABLE_CONTENT, ex.getMessage(), request, List.of());
 	}
 
-	/** Erros do Bean Validation nos DTOs (@Valid): devolve a lista de campos invalidos. */
 	@ExceptionHandler(MethodArgumentNotValidException.class)
 	public ResponseEntity<ErroResponse> validacao(MethodArgumentNotValidException ex, HttpServletRequest request) {
 		List<CampoInvalido> campos = ex.getBindingResult().getFieldErrors().stream()
@@ -66,7 +62,6 @@ public class GlobalExceptionHandler {
 				"Valor invalido para o parametro '" + ex.getName() + "'", request, List.of());
 	}
 
-	/** Violacao de constraint do banco (FK, UNIQUE, CHECK) que escapou das validacoes do service. */
 	@ExceptionHandler(DataIntegrityViolationException.class)
 	public ResponseEntity<ErroResponse> integridade(DataIntegrityViolationException ex, HttpServletRequest request) {
 		log.warn("Violacao de integridade em {}: {}", request.getRequestURI(), ex.getMostSpecificCause().getMessage());
@@ -75,13 +70,11 @@ public class GlobalExceptionHandler {
 				request, List.of());
 	}
 
-	/** Login com e-mail ou senha errados. */
 	@ExceptionHandler(BadCredentialsException.class)
 	public ResponseEntity<ErroResponse> credenciaisInvalidas(BadCredentialsException ex, HttpServletRequest request) {
 		return responder(HttpStatus.UNAUTHORIZED, ex.getMessage(), request, List.of());
 	}
 
-	/** Requisicao sem token, ou com token invalido ou expirado. */
 	@ExceptionHandler(AuthenticationException.class)
 	public ResponseEntity<ErroResponse> naoAutenticado(AuthenticationException ex, HttpServletRequest request) {
 		return responder(HttpStatus.UNAUTHORIZED,

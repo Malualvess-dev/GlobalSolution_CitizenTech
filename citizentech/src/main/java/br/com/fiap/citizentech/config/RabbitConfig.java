@@ -10,18 +10,6 @@ import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-/**
- * Mensageria assincrona com RabbitMQ (Requisito 5 - Opcao A).
- *
- * <pre>
- * SolicitacaoEmbarqueService --(evento, apos o commit)--> exchange citizentech.solicitacoes
- *     --routing key solicitacao.criada--> fila citizentech.solicitacao.criada --> AvisoMotoristaListener
- *
- * Mensagem que falha 3 vezes no consumidor --> fila citizentech.solicitacao.criada.dlq
- * </pre>
- *
- * Exchange, filas e bindings sao criados automaticamente no RabbitMQ quando a aplicacao conecta.
- */
 @Configuration
 public class RabbitConfig {
 
@@ -37,7 +25,6 @@ public class RabbitConfig {
 		return new DirectExchange(EXCHANGE_SOLICITACOES);
 	}
 
-	/** Fila duravel; mensagens rejeitadas vao para a DLQ em vez de se perderem ou ficarem em loop. */
 	@Bean
 	public Queue filaSolicitacaoCriada() {
 		return QueueBuilder.durable(FILA_SOLICITACAO_CRIADA)
@@ -58,7 +45,6 @@ public class RabbitConfig {
 		return new DirectExchange(EXCHANGE_DLX);
 	}
 
-	/** Dead letter queue: guarda os eventos que nao puderam ser processados, para analise. */
 	@Bean
 	public Queue filaSolicitacaoCriadaDlq() {
 		return QueueBuilder.durable(FILA_SOLICITACAO_CRIADA_DLQ).build();
@@ -71,7 +57,6 @@ public class RabbitConfig {
 				.with(ROUTING_KEY_SOLICITACAO_CRIADA);
 	}
 
-	/** Mensagens em JSON. So aceita desserializar tipos do pacote de mensageria da aplicacao. */
 	@Bean
 	public MessageConverter messageConverter() {
 		return new JacksonJsonMessageConverter("br.com.fiap.citizentech.messaging");

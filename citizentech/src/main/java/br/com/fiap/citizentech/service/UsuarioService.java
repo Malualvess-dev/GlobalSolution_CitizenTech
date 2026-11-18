@@ -64,7 +64,6 @@ public class UsuarioService {
 				.orElseThrow(() -> new RecursoNaoEncontradoException("Usuario", id));
 	}
 
-	/** Busca o usuario e confere se ele tem o perfil esperado (ex.: cuidador do passageiro). */
 	public Usuario buscarComPerfil(Long id, Perfil perfilEsperado) {
 		Usuario usuario = buscarEntidade(id);
 		if (usuario.getPerfil() != perfilEsperado) {
