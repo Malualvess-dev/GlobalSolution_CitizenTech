@@ -17,7 +17,7 @@ Perfis de usuário:
 | Deploy da API | https://api-paradacerta.azurewebsites.net |
 | Swagger | https://api-paradacerta.azurewebsites.net/swagger-ui.html |
 | App Mobile (front) | https://github.com/Jounaxis/parada-certa |
-| Vídeo pitch | _link do vídeo_ |
+| Vídeo pitch | https://youtu.be/5VB5vxgl-hM |
 | Opção do requisito 5 | **A – mensageria com RabbitMQ** |
 
 ---
